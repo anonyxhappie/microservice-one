@@ -2,31 +2,24 @@ FROM python:3.6-slim
 
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
-RUN mkdir /common /code1 /code2 /code3
+RUN mkdir /code1 /code2 /code3
 RUN pip install --upgrade pip
 
-WORKDIR /common
+RUN apt-get update -y
+RUN apt-get install -y tar git curl nano wget dialog net-tools build-essential
 
-COPY ./requirements.txt /common/
-COPY ./start.sh /common/
+RUN git clone https://github.com/anonyxhappie/microservice-one
+RUN git clone https://github.com/anonyxhappie/microservice-two
+RUN git clone https://github.com/anonyxhappie/microservice-three
+RUN pip install -r /microservice-one/requirements.txt
 
-RUN pip install -r requirements.txt
-COPY ./project_dir /code1/
-WORKDIR /code1
-RUN python manage.py migrate
+COPY .env microservice-one/
+COPY .env microservice-two/
+COPY .env microservice-three/
 
-COPY ./project_dir /code2/
-WORKDIR /code2
-RUN python manage.py migrate
-
-COPY ./project_dir /code3/
-WORKDIR /code3
-RUN python manage.py migrate
+COPY start.sh .
+RUN chmod +x start.sh
 
 EXPOSE 8000 8001 8002
 
-# RUN chmod +x /common/start.sh
-
-# CMD ["/common/start.sh"]
-
-# CMD ["python", "/code1/manage.py", "runserver", "0.0.0.0:8000"]
+CMD [ "/start.sh" ]
